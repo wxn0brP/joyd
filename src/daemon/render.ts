@@ -1,6 +1,8 @@
 import { note } from "./note";
 import { MenuState } from "./types";
 
+const invert = process.env.INVERT_MENU === "true";
+
 export function renderMenu(menu: MenuState) {
     const [top, right, bottom, left] = menu.data.map((cmd) => cmd.name);
 
@@ -12,11 +14,11 @@ export function renderMenu(menu: MenuState) {
     }
 
     const string = `
-    ${leftSpace(top)}
+    ${leftSpace(invert ? top : bottom)}
     ${leftSpace("|")}
     ${left} < ${menu.name} > ${right}
     ${leftSpace("|")}
-    ${leftSpace(bottom)}
+    ${leftSpace(invert ? bottom : top)}
 `;
     console.log(string);
     note(string);
