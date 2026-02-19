@@ -8,15 +8,24 @@ if (!runtimeDir) throw new Error("XDG_RUNTIME_DIR not set");
 
 const socketPath = path.join(runtimeDir, "wxn0brp-joyd.sock");
 
-// detect first /dev/ttyUSB*
-const portInfo = (await SerialPort.list())
-	.find(p => p.path.startsWith("/dev/ttyUSB"));
+/** @type {SerialPort} */
+let port;
+let portBound = +process.env.SERIAL_BAUD_RATE || 9600;
+let portPath = process.env.SERIAL_PORT;
 
-if (!portInfo) throw new Error("No ttyUSB device found");
+if (!portPath) {
+	// detect first /dev/ttyUSB*
+	const portInfo = (await SerialPort.list())
+		.find(p => p.path.startsWith("/dev/ttyUSB"));
 
-const port = new SerialPort({
-	path: portInfo.path,
-	baudRate: 9600
+	if (!portInfo) throw new Error("No ttyUSB device found");
+
+	portPath = portInfo.path;
+}
+
+port = new SerialPort({
+	path: portPath,
+	baudRate: portBound
 });
 
 const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
