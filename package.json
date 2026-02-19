@@ -1,0 +1,22 @@
+{
+	"name": "@wxn0brp/joyd",
+	"version": "0.0.1",
+	"main": "src/index.ts",
+	"description": "",
+	"author": "wxn0brP",
+	"license": "MIT",
+	"type": "module",
+	"bin": {
+		"joyd": "src/cli/index.ts"
+	},
+	"scripts": {
+		"start": "bun run src/index.ts"
+	},
+	"devDependencies": {
+		"@types/bun": "*",
+		"typescript": "*"
+	},
+	"dependencies": {
+		"@wxn0brp/event-emitter": "^0.0.5"
+	}
+}

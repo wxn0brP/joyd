@@ -1,0 +1,10 @@
+{
+	cmd: "joyd restart && sleep 2 && joyd watch-logs",
+	watch: [
+		"src/daemon"
+	],
+	restart_cmd: "clear",
+	events: {
+		rs: "clear"
+	}
+}

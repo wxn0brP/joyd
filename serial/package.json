@@ -1,0 +1,12 @@
+{
+	"name": "serial",
+	"version": "0.0.1",
+	"license": "MIT",
+	"author": "wxn0brP",
+	"type": "module",
+	"main": "index.js",
+	"dependencies": {
+		"@serialport/parser-readline": "^13.0.0",
+		"serialport": "^13.0.0"
+	}
+}
