@@ -76,3 +76,7 @@ parser.on("data", data => {
 		console.error(e);
 	}
 });
+
+setInterval(() => {
+	socket.write(JSON.stringify({ action: "ping" }) + "\n");
+}, 2 * 60 * 1000); // every 2 minutes to keep connection alive
