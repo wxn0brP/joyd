@@ -47,13 +47,13 @@ node .
 
 The `serial/index.js` accepts optional environment variables:
 
-- `SERIAL_PORT` - serial port path (e.g. `/dev/ttyUSB0`). If not set, auto-detects first `/dev/ttyUSB*` device.
-- `SERIAL_BAUD_RATE` - baud rate (default: `9600`)
+- `JOYD_SERIAL_PORT` - serial port path (e.g. `/dev/ttyUSB0`). If not set, auto-detects first `/dev/ttyUSB*` device.
+- `JOYD_SERIAL_BAUD_RATE` - baud rate (default: `9600`)
 
 Example:
 
 ```bash
-SERIAL_PORT=/dev/ttyUSB0 SERIAL_BAUD_RATE=115200 node .
+JOYD_SERIAL_PORT=/dev/ttyUSB0 JOYD_SERIAL_BAUD_RATE=115200 node .
 ```
 
 ### CLI commands

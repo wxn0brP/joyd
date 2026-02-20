@@ -8,14 +8,15 @@ const cmd = process.argv[2];
 
 if (!cmd) {
     console.log(`Usage: joyd`);
-    console.log(` stop|start|restart|status - systemctl`);
+    console.log(` stop|start|restart|status|enable|disable - systemctl`);
     console.log(` register - register service`);
     console.log(` logs - journalctl`);
     console.log(` watch|watch-logs|ping - ctl`);
+    console.log(` node-start|node-stop - node subprocess for serial port`);
     process.exit(1);
 }
 
-if (["start", "stop", "restart", "status"].includes(cmd)) {
+if (["start", "stop", "restart", "status", "enable", "disable"].includes(cmd)) {
     const args = `systemctl --user ${cmd} wxn0brp-joyd.service`;
     spawnSync(args, {
         shell: true,
@@ -39,19 +40,34 @@ if (cmd === "register") {
 
 const client = net.createConnection(SOCKET_PATH);
 
+function writeToSocket(payload: unknown) {
+    client.write(JSON.stringify(payload) + "\n");
+}
+
 client.on("connect", () => {
     switch (cmd) {
         case "watch-logs":
         case "watch":
-            client.write(JSON.stringify({ action: "watch" }) + "\n");
+            writeToSocket({ action: "watch" });
             break;
 
         case "ping":
-            client.write(JSON.stringify({ action: "ping" }) + "\n");
+            writeToSocket({ action: "ping" });
+            client.end();
             break;
 
         case "axis":
-            client.write(JSON.stringify({ action: "axis", x: +process.argv[3], y: +process.argv[4] }) + "\n");
+            writeToSocket({
+                action: "axis",
+                x: +process.argv[3],
+                y: +process.argv[4]
+            });
+            client.end();
+            break;
+
+        case "node-start":
+        case "node-stop":
+            writeToSocket({ action: cmd });
             break;
 
         default:

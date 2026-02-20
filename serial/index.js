@@ -10,8 +10,8 @@ const socketPath = path.join(runtimeDir, "wxn0brp-joyd.sock");
 
 /** @type {SerialPort} */
 let port;
-let portBound = +process.env.SERIAL_BAUD_RATE || 9600;
-let portPath = process.env.SERIAL_PORT;
+let portBound = +process.env.JOYD_SERIAL_BAUD_RATE || 9600;
+let portPath = process.env.JOYD_SERIAL_PORT;
 
 if (!portPath) {
 	// detect first /dev/ttyUSB*
