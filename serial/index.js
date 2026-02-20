@@ -1,3 +1,4 @@
+// @ts-check
 import { SerialPort } from "serialport";
 import { ReadlineParser } from "@serialport/parser-readline";
 import net from "node:net";
@@ -8,10 +9,18 @@ if (!runtimeDir) throw new Error("XDG_RUNTIME_DIR not set");
 
 const socketPath = path.join(runtimeDir, "wxn0brp-joyd.sock");
 
-/** @type {SerialPort} */
+/** @type {SerialPort | null} */
 let port;
-let portBound = +process.env.JOYD_SERIAL_BAUD_RATE || 9600;
+/** @type {net.Socket | null} */
+let socket = null;
+/** @type {ReadlineParser | null} */
+let parser;
+let portBound = Number(process.env.JOYD_SERIAL_BAUD_RATE) || 9600;
 let portPath = process.env.JOYD_SERIAL_PORT;
+
+let lastLine = "";
+let lastX = 0;
+let lastY = 0;
 
 if (!portPath) {
 	// detect first /dev/ttyUSB*
@@ -23,36 +32,96 @@ if (!portPath) {
 	portPath = portInfo.path;
 }
 
-port = new SerialPort({
-	path: portPath,
-	baudRate: portBound
-});
+function createSerial(i = 0) {
+	if (i > 25) {
+		console.error("Serial port failed");
+		process.exit(1);
+	}
 
-const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
+	if (port) {
+		port.removeAllListeners();
+		if (port.isOpen)
+			port.close();
+		port = null;
+	}
+	if (parser) {
+		parser.removeAllListeners();
+		parser = null;
+	}
 
-const socket = net.createConnection(socketPath);
+	port = new SerialPort({
+		path: portPath,
+		baudRate: portBound
+	});
 
-socket.on("error", (err) => {
-	console.error("Connection error:", err);
-});
+	port.on("error", (err) => {
+		console.error("Serial error:", err);
+		setTimeout(() => {
+			createSerial(i + 1);
+		}, 10_000);
+	});
 
-socket.on("data", (data) => {
-	console.error(data.toString());
-});
+	port.on("open", () => {
+		console.log("Serial port open");
+		if (!port) return console.error("Serial port is null");
 
-socket.on("close", () => {
-	console.error("Connection closed");
-	process.exit(1);
-})
+		parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
 
-socket.write(JSON.stringify({ action: "ping" }) + "\n");
+		parser.on("data", handleLine);
+	});
 
-let lastLine = "";
-let lastX = 0;
-let lastY = 0;
+	port.on("close", () => {
+		console.log("Serial port closed");
+		setTimeout(() => {
+			createSerial(i + 1);
+		}, 1000);
+	});
+}
 
-parser.on("data", data => {
-	/** @type {string} */
+function createSocket(i = 0) {
+	if (i > 5) {
+		console.error("Connection failed");
+		process.exit(1);
+	}
+
+	if (socket) {
+		socket.removeAllListeners();
+		socket.destroy();
+		socket = null;
+		createSocket(0);
+		return
+	}
+
+	socket = net.createConnection(socketPath);
+
+	socket.on("error", (err) => {
+		console.error("Connection error:", err);
+	});
+
+	socket.on("data", (data) => {
+		console.log(data.toString());
+	});
+
+	socket.on("close", () => {
+		console.error("Connection closed");
+		setTimeout(() => createSocket(i + 1), 1000);
+	});
+
+	socket.on("connect", () => {
+		console.log("Connected");
+		if (!socket) return;
+		writeToSocket({ action: "ping" });
+	});
+}
+
+/** @param {any} payload */
+function writeToSocket(payload) {
+	if (!socket) return;
+	socket.write(JSON.stringify(payload) + "\n");
+}
+
+/** @param {string} data */
+function handleLine(data) {
 	const line = data.trim();
 	if (line === lastLine) return;
 	lastLine = line;
@@ -70,13 +139,20 @@ parser.on("data", data => {
 		// invert y (hardware is inverted)
 		y = 8 - y;
 
-		const json = JSON.stringify({ action: "axis", x, y });
-		socket.write(json + "\n");
+		writeToSocket({ action: "axis", x, y });
 	} catch (e) {
 		console.error(e);
 	}
-});
+}
 
 setInterval(() => {
-	socket.write(JSON.stringify({ action: "ping" }) + "\n");
-}, 2 * 60 * 1000); // every 2 minutes to keep connection alive
+	writeToSocket({ action: "ping" });
+}, 2 * 60 * 1000); // every 2 to keep connection alive
+
+setInterval(() => {
+	createSocket();
+}, 15 * 60 * 1000); // every 15 reconnect
+
+// setTimeout(createSocket, 2000);
+createSocket();
+createSerial();

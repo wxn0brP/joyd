@@ -20,7 +20,7 @@ export function handleAxis(x: number, y: number) {
 
     if (xDead && yDead) {
         clearTimeout(timeout);
-        timeout = setTimeout(() => blocked = false, 300);
+        timeout = setTimeout(() => blocked = false, 100);
         return note("dead zone");
     }
 
