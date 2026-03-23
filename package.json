@@ -14,7 +14,7 @@
 	},
 	"devDependencies": {
 		"@types/bun": "*",
-		"typescript": "^5"
+		"typescript": "^6.0.0"
 	},
 	"dependencies": {
 		"@wxn0brp/event-emitter": "^0.0.5"
