@@ -17,6 +17,6 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@wxn0brp/event-emitter": "^0.0.5"
+		"@wxn0brp/event-emitter": "^0.0.6"
 	}
 }
